@@ -1,4 +1,5 @@
-(ns untangled.client-db.core)
+(ns untangled.client-db.core
+  (:require [om.tempid :as omt]))
 
 (def concatv (comp vec concat))
 
@@ -13,7 +14,8 @@
 (defn make-index [state]
   (atom {}))
 
-(defn unravel [{:keys [state index schema]} ident-key data]
+(defn unravel [{:keys [state index schema]} ident-key data & {:keys [validate!]
+                                                              :or {validate! (constantly true)}}]
   (assert (contains? (:tables @schema) ident-key)
     (str ident-key " is not a valid ident-key in " (keys (:tables @schema))))
   (let [unraveled (atom {})
@@ -30,7 +32,7 @@
                                  -index- kv-to-index)))))
             (lookup-in-schema [ident-key]
               (first (or (get (:attrs @schema) ident-key)
-                         (assert false "BAD"))))
+                         (assert false (str "failed to find " ident-key)))))
             (step [{:keys [db/id] :as data}]
               (let [ident-key (if (empty? @path) ident-key
                                 (lookup-in-schema (peek @path)))
@@ -49,6 +51,7 @@
                 :else     false))
             (inner [data]
               (when-let [[k v] (and (pair? data) data)]
+                (validate! k v)
                 (when (contains? (:attrs @schema) k)
                   (assert (valid-value? k v)
                     (str [k v] " is not valid according to: " (select-keys (:attrs @schema) [k]))))
@@ -59,6 +62,7 @@
             (my-walk
               [inner outer form]
               (cond
+                (record? form) form
                 (map? form) (outer (into (empty form) (map (comp inner pair) (for [[k v] form] [k v]))))
                 (list? form) (outer (apply list (map inner form)))
                 (seq? form) (outer (doall (map inner form)))
@@ -69,15 +73,27 @@
       (walk data)
       @unraveled)))
 
-(defn smart-merge [& xs]
-  (cond
-    (every? map? xs)
-    (apply merge-with smart-merge xs)
+(defn intertwine [{:keys [state]} data & {:keys [replace?]}]
+  (letfn [(smart-merge [& xs]
+            (cond
+              (every? map? xs) #_:>> (apply merge-with smart-merge xs)
+              (and (every? vector? xs)
+                   (not replace?))
+              #_:>> (apply concatv xs)
+              :else (last xs)))]
+    (swap! state smart-merge data)))
 
-    (every? vector? xs)
-    (apply concatv xs)
+(defn create! [{:keys [state index schema] :as env} index-key data]
+  (intertwine env (unravel env index-key data
+                           :validate! #(when (= %1 :db/id)
+                                         (assert (omt/tempid? %2))))))
 
-    :else (last xs)))
+(defn set! [{:keys [state index schema] :as env} index-key data]
+  (intertwine env (unravel env index-key data)
+              :replace? true))
 
-(defn intertwine [{:keys [state]} data]
-  (swap! state smart-merge data))
+(defn add! [{:keys [state index schema] :as env} index-key data]
+  (intertwine env (unravel env index-key data)))
+
+(defn delete! [{:keys [state index schema] :as env} index-key data]
+  (assert false "NOT IMPL"))

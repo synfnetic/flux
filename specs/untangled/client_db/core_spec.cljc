@@ -1,8 +1,10 @@
 (ns untangled.client-db.core-spec
   (:require [untangled-spec.core #?(:clj :refer :cljs :refer-macros)
              [specification component behavior assertions provided when-mocking]]
-            [untangled.client-db.core :as src])
-  #?(:clj (:import (clojure.lang ExceptionInfo))))
+            [untangled.client-db.core :as src]
+            [om.tempid :as omt])
+  #?(:clj (:import (clojure.lang ExceptionInfo)
+                   (java.util UUID))))
 
 (def schema
   {:todo/items [:todo-items/by-id :ref/many]
@@ -28,7 +30,7 @@
     @(src/make-index dflt-state)
     => {}))
 
-(specification "client db"
+(specification "helpers"
   (component "unravel"
     (behavior "unravels nested data into a normalizable format"
       (let [env (make-env)]
@@ -94,4 +96,72 @@
           {100 {:db/id 100
                 :todo/text "NEW"
                 :todo/items [[:todo-items/by-id 666]
-                             [:todo-items/by-id 200]]}}})))
+                             [:todo-items/by-id 200]]}}}
+      "it can also replace ref manys"
+      (src/intertwine
+        (make-env {:todo-items/by-id
+                   {100 {:db/id 100
+                         :todo/text "OLD"
+                         :todo/items
+                         [[:todo-items/by-id 666]]}}})
+        {:todo-items/by-id
+         {100 {:db/id 100
+               :todo/text "NEW"
+               :todo/items [[:todo-items/by-id 200]]}}}
+        :replace? true)
+      => {:todo-items/by-id
+          {100 {:db/id 100
+                :todo/text "NEW"
+                :todo/items [[:todo-items/by-id 200]]}}})))
+
+(defn om-tempid []
+  (omt/tempid #?(:clj (UUID/randomUUID))))
+
+(specification "public API"
+  (component "create!"
+    (let [env (make-env)
+          omt-1 (om-tempid)]
+      (assertions "can only create entities with om tempids for db/ids"
+        (src/create! env :todo-items/by-id
+                     {:db/id 100
+                      :todo/text "create 100"})
+        =throws=> (assertion-error #"omt/tempid\?")
+        (do (src/create! env :todo-items/by-id
+                         {:db/id omt-1
+                          :todo/text "create 100"})
+            @(:state env))
+        => {:todo-items/by-id {omt-1 {:db/id omt-1 :todo/text "create 100"}}}
+        @(:index env) => {})))
+  (component "set!"
+    (let [env (make-env {:todo-items/by-id
+                         {100 {:db/id 100
+                               :todo/items [[:todo-items/by-id 10]]}} })]
+      (assertions
+        (do (src/set! env :todo-items/by-id
+                      {:db/id 100
+                       :todo/items [{:db/id 200
+                                     :todo/text "set 200"}]})
+            @(:state env))
+        => {:todo-items/by-id
+            {200 {:db/id 200, :todo/text "set 200"},
+             100 {:db/id 100, :todo/items [[:todo-items/by-id 200]]}}})))
+  ;;TODO: should set! & add! not allow om-tempids?
+  ;; otherwise what's the point of create? just cause api?
+  (component "add!"
+    (let [env (make-env)]
+      (let [env (make-env {:todo-items/by-id
+                           {100 {:db/id 100
+                                 :todo/items [[:todo-items/by-id 10]]}} })]
+        (assertions
+          (do (src/add! env :todo-items/by-id
+                        {:db/id 100
+                         :todo/items [{:db/id 200
+                                       :todo/text "set 200"}]})
+              @(:state env))
+          => {:todo-items/by-id
+              {200 {:db/id 200, :todo/text "set 200"},
+               100 {:db/id 100, :todo/items [[:todo-items/by-id 10]
+                                             [:todo-items/by-id 200]]}}}))))
+  (component "delete!"
+    (let [env (make-env)]
+      )))
