@@ -42,12 +42,17 @@
               (let [new-data (cond-> data (map? data) (step))]
                 (when (pair? data) (swap! path pop))
                 new-data))
+            (valid-value? [k v]
+              (case (->> k (get (:attrs @schema)) second)
+                :ref/one  (map? v)
+                :ref/many (vector? v)
+                :else     false))
             (inner [data]
-              (when (pair? data)
-                ;;TODO validate [key val] in data w/ schema
-                ;;eg: should crash if {} or a [] is not in schema
-                ;; or its a {} but in schema its a :ref/many
-                (swap! path conj (first data)))
+              (when-let [[k v] (and (pair? data) data)]
+                (when (contains? (:attrs @schema) k)
+                  (assert (valid-value? k v)
+                    (str [k v] " is not valid according to: " (select-keys (:attrs @schema) [k]))))
+                (swap! path conj k))
               data)
             (pair? [x] (-> x meta ::pair))
             (pair [x] (with-meta x {::pair true}))
@@ -65,7 +70,6 @@
       @unraveled)))
 
 (defn smart-merge [& xs]
-  ;;TODO how efficient/fast is this?
   (cond
     (every? map? xs)
     (apply merge-with smart-merge xs)

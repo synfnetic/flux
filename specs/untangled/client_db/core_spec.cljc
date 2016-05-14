@@ -5,7 +5,8 @@
   #?(:clj (:import (clojure.lang ExceptionInfo))))
 
 (def schema
-  {:todo/items [:todo-items/by-id :ref/many]})
+  {:todo/items [:todo-items/by-id :ref/many]
+   :current/todo [:todo-items/by-id :ref/one]})
 
 (def dflt-state
   {})
@@ -19,9 +20,8 @@
 (specification "initialization"
   (assertions
     "make-schema"
-    @(src/make-schema schema)
-    => {:attrs  {:todo/items [:todo-items/by-id :ref/many] }
-        :tables {:todo-items/by-id #{:todo/items}}}
+    ((juxt :attrs :tables) @(src/make-schema schema))
+    => [schema {:todo-items/by-id #{:todo/items :current/todo}}]
     "make-index"
     @(src/make-index dflt-state)
     => {}))
@@ -54,8 +54,16 @@
     (let [env (make-env)]
       (assertions "throws an error if the ident-key is not in the schema"
         (src/unravel env :invalid/ident-key nil)
-        =throws=> (AssertionError #"is not a valid ident-key")
-        )))
+        =throws=> (AssertionError #"is not a valid ident-key"))
+      (behavior "attributes pointing to a vector or a map"
+        (assertions
+          "should be the correct :ref type"
+          (src/unravel env :todo-items/by-id
+                       {:db/id 1 :todo/items {}})
+          =throws=> (AssertionError #"is not valid")
+          (src/unravel env :todo-items/by-id
+                       {:db/id 1 :current/todo []})
+          =throws=> (AssertionError #"is not valid")))))
 
   (component "intertwine"
     (assertions
