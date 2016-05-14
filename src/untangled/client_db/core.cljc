@@ -6,31 +6,33 @@
   (->> schema
     (group-by (comp first second))
     (mapv (fn [x] (update x 1 #(set (map first %)))))
-    (into {})
-    (merge schema)
+    (into {}) (assoc {} :tables)
+    (merge {:attrs schema})
     (atom)))
 
 (defn make-index [state]
   (atom {}))
 
-(defn unravel [{:keys [state index schema]} table data]
-  ;;TODO table should be a valid 'entry' in the schema
+(defn unravel [{:keys [state index schema]} ident-key data]
+  (assert (contains? (:tables @schema) ident-key)
+    (str ident-key " is not a valid ident-key in " (keys (:tables @schema))))
   (let [unraveled (atom {})
         path (atom [])]
     (letfn [(update-index [{:keys [db/id] :as data}]
-              (let [kv-to-index (filter (comp @schema first) data)]
-                (swap! index #(reduce
+              (let [kv-to-index (filter (comp (:attrs @schema) first) data)]
+                (swap! index (fn [-index-] (reduce
                                 (fn [acc [k links]]
+                                  ;;TODO will probably break on ref/one 's
                                   (reduce
                                     (fn [acc v]
                                       (update-in acc v conj [(lookup-in-schema k) id]))
                                     acc links))
-                                % kv-to-index))))
+                                -index- kv-to-index)))))
             (lookup-in-schema [ident-key]
-              (first (or (get @schema ident-key)
+              (first (or (get (:attrs @schema) ident-key)
                          (assert false "BAD"))))
             (step [{:keys [db/id] :as data}]
-              (let [ident-key (if (empty? @path) table
+              (let [ident-key (if (empty? @path) ident-key
                                 (lookup-in-schema (peek @path)))
                     ident [ident-key id]]
                 (swap! unraveled assoc-in ident data)
