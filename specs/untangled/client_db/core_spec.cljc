@@ -17,6 +17,8 @@
          :schema (src/make-schema schema)
          :index  (src/make-index st)}))
 
+(def assertion-error #?(:clj AssertionError :cljs js/Error))
+
 (specification "initialization"
   (assertions
     "make-schema"
@@ -49,21 +51,32 @@
           @(:index env)
           => {:todo-items/by-id
               {200 [[:todo-items/by-id 100]]
-               300 [[:todo-items/by-id 200]]}})))
+               300 [[:todo-items/by-id 200]]}}))
+      (let [env (make-env)]
+        (assertions
+          (src/unravel env :todo-items/by-id
+                       {:db/id 111
+                        :current/todo {:db/id 222
+                                       :todo/text "asdf"}})
+          => {:todo-items/by-id
+              {222 {:db/id 222 :todo/text "asdf"}
+               111 {:db/id 111 :current/todo [:todo-items/by-id 222]}}}
+          @(:index env)
+          => {:todo-items/by-id {222 [[:todo-items/by-id 111]]}})))
 
     (let [env (make-env)]
       (assertions "throws an error if the ident-key is not in the schema"
         (src/unravel env :invalid/ident-key nil)
-        =throws=> (AssertionError #"is not a valid ident-key"))
+        =throws=> (assertion-error #"is not a valid ident-key"))
       (behavior "attributes pointing to a vector or a map"
         (assertions
           "should be the correct :ref type"
           (src/unravel env :todo-items/by-id
                        {:db/id 1 :todo/items {}})
-          =throws=> (AssertionError #"is not valid")
+          =throws=> (assertion-error #"is not valid")
           (src/unravel env :todo-items/by-id
                        {:db/id 1 :current/todo []})
-          =throws=> (AssertionError #"is not valid")))))
+          =throws=> (assertion-error #"is not valid")))))
 
   (component "intertwine"
     (assertions

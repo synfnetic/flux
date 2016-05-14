@@ -20,14 +20,14 @@
         path (atom [])]
     (letfn [(update-index [{:keys [db/id] :as data}]
               (let [kv-to-index (filter (comp (:attrs @schema) first) data)]
-                (swap! index (fn [-index-] (reduce
-                                (fn [acc [k links]]
-                                  ;;TODO will probably break on ref/one 's
-                                  (reduce
-                                    (fn [acc v]
-                                      (update-in acc v conj [(lookup-in-schema k) id]))
-                                    acc links))
-                                -index- kv-to-index)))))
+                (swap! index (fn [-index-]
+                               (reduce
+                                 (fn [acc [k ?links]]
+                                   (reduce
+                                     (fn [acc v]
+                                       (update-in acc v conj [(lookup-in-schema k) id]))
+                                     acc (cond-> ?links (not (every? vector? ?links)) (vector))))
+                                 -index- kv-to-index)))))
             (lookup-in-schema [ident-key]
               (first (or (get (:attrs @schema) ident-key)
                          (assert false "BAD"))))
