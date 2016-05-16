@@ -4,12 +4,12 @@
 (def concatv (comp vec concat))
 
 (defn make-schema [schema]
-  (->> schema
-    (group-by (comp first second))
-    (mapv (fn [x] (update x 1 #(set (map first %)))))
-    (into {}) (assoc {} :tables)
-    (merge {:attrs schema})
-    (atom)))
+  (atom {:attrs  schema
+         :tables (reduce
+                   (fn [acc [k [ident]]]
+                     (update acc ident (fnil conj #{}) k))
+                   {}
+                   schema)}))
 
 (defn make-index [state]
   (atom {}))
