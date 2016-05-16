@@ -12,6 +12,7 @@
                    schema)}))
 
 (defn make-index [state]
+  ;;TODO initial indexing of w/e state
   (atom {}))
 
 (defn unravel [{:keys [state index schema]} ident-key data & {:keys [validate!]
@@ -54,7 +55,9 @@
                 (validate! k v)
                 (when (contains? (:attrs @schema) k)
                   (assert (valid-value? k v)
-                    (str [k v] " is not valid according to: " (select-keys (:attrs @schema) [k]))))
+                    (str [k v] " is not valid according to: " (select-keys (:attrs @schema) [k])))
+                  ;;TODO: validate if not in schema & is map? or vector?
+                  )
                 (swap! path conj k))
               data)
             (pair? [x] (-> x meta ::pair))
@@ -96,4 +99,5 @@
   (intertwine env (unravel env index-key data)))
 
 (defn delete! [{:keys [state index schema] :as env} index-key data]
+  ;; TODO
   (assert false "NOT IMPL"))
