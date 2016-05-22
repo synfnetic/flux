@@ -114,49 +114,59 @@
 
 (specification "public API"
   (component "create!"
-    (let [env (make-env)
+    (let [env   (make-env)
           omt-1 (omt/tempid)]
       (assertions "can only create entities with om tempids for db/ids"
         (src/create! env :todo-items/by-id
-                     {:db/id 100
-                      :todo/text "create 100"})
+          {:db/id     100
+           :todo/text "create 100"})
         =throws=> (assertion-error #"omt/tempid\?")
         (do (src/create! env :todo-items/by-id
-                         {:db/id omt-1
-                          :todo/text "create 100"})
+              {:db/id     omt-1
+               :todo/text "create 100"})
             @(:state env))
         => {:todo-items/by-id {omt-1 {:db/id omt-1 :todo/text "create 100"}}}
         @(:index env) => {})))
   (component "set!"
     (let [env (make-env {:todo-items/by-id
-                         {100 {:db/id 100
+                         {100 {:db/id      100
                                :todo/items [[:todo-items/by-id 10]]}} })]
       (assertions
         (do (src/set! env :todo-items/by-id
-                      {:db/id 100
-                       :todo/items [{:db/id 200
-                                     :todo/text "set 200"}]})
+              {:db/id      100
+               :todo/items [{:db/id     200
+                             :todo/text "set 200"}]})
             @(:state env))
         => {:todo-items/by-id
-            {200 {:db/id 200, :todo/text "set 200"},
-             100 {:db/id 100, :todo/items [[:todo-items/by-id 200]]}}})))
+            {200 {:db/id 200 :todo/text "set 200"}
+             100 {:db/id 100 :todo/items [[:todo-items/by-id 200]]}}})))
   ;;TODO: should set! & add! not allow om-tempids?
   ;; otherwise what's the point of create? just cause api?
   (component "add!"
-    (let [env (make-env)]
-      (let [env (make-env {:todo-items/by-id
-                           {100 {:db/id 100
-                                 :todo/items [[:todo-items/by-id 10]]}} })]
-        (assertions
-          (do (src/add! env :todo-items/by-id
-                        {:db/id 100
-                         :todo/items [{:db/id 200
-                                       :todo/text "set 200"}]})
-              @(:state env))
-          => {:todo-items/by-id
-              {200 {:db/id 200, :todo/text "set 200"},
-               100 {:db/id 100, :todo/items [[:todo-items/by-id 10]
-                                             [:todo-items/by-id 200]]}}}))))
+    (let [env (make-env {:todo-items/by-id
+                         {100 {:db/id      100
+                               :todo/items [[:todo-items/by-id 10]]}} })]
+      (assertions
+        (do (src/add! env :todo-items/by-id
+              {:db/id      100
+               :todo/items [{:db/id     200
+                             :todo/text "set 200"}]})
+            @(:state env))
+        => {:todo-items/by-id
+            {200 {:db/id 200 :todo/text "set 200"}
+             100 {:db/id 100 :todo/items [[:todo-items/by-id 10]
+                                          [:todo-items/by-id 200]]}}})))
   (component "delete!"
-    (let [env (make-env)]
-      )))
+    (let [env (make-env)
+          t-1 (omt/tempid)
+          t-2 (omt/tempid)]
+      (do (src/create! env :todo-items/by-id
+            {:db/id     t-1
+             :todo/text "create 100"})
+          (src/set! env :todo-items/by-id {:db/id      t-1
+                                           :todo/items [{:db/id     t-2
+                                                         :todo/text "set 200"}]}))
+      (assertions
+        (do (src/delete! env :todo-items/by-id {:db/id t-2}) @(:state env))
+        => {:todo-items/by-id {t-1 {:db/id     t-1
+                                    :todo/text "create 100"}}}))))
