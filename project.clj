@@ -1,4 +1,4 @@
-(defproject navis/untangled-client-db "0.1.0-SNAPSHOT"
+(defproject navis/untangled-mutations "0.1.0-SNAPSHOT"
   :description "A cljc (server and client) validation library"
   :url ""
   :license {:name "MIT Public License"
@@ -27,7 +27,7 @@
   :cljsbuild {:builds [{:id           "test"
                         :source-paths ["specs" "src"]
                         :figwheel     true
-                        :compiler     {:main                 untangled.client-db.spec-main
+                        :compiler     {:main                 untangled.mutations.spec-main
                                        :output-to            "resources/public/js/specs/specs.js"
                                        :output-dir           "resources/public/js/compiled/specs"
                                        :asset-path           "js/compiled/specs"

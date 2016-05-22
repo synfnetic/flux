@@ -1,4 +1,4 @@
-(ns untangled.client-db.core
+(ns untangled.mutations.client
   (:require [om.tempid :as omt]))
 
 (def concatv (comp vec concat))

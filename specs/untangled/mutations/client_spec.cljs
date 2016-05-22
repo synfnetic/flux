@@ -1,10 +1,8 @@
-(ns untangled.client-db.core-spec
-  (:require [untangled-spec.core #?(:clj :refer :cljs :refer-macros)
+(ns untangled.mutations.client-spec
+  (:require [untangled-spec.core :refer-macros
              [specification component behavior assertions provided when-mocking]]
-            [untangled.client-db.core :as src]
-            [om.tempid :as omt])
-  #?(:clj (:import (clojure.lang ExceptionInfo)
-                   (java.util UUID))))
+            [untangled.mutations.client :as src]
+            [om.tempid :as omt]))
 
 (def schema
   {:todo/items [:todo-items/by-id :ref/many]
@@ -19,7 +17,7 @@
          :schema (src/make-schema schema)
          :index  (src/make-index st)}))
 
-(def assertion-error #?(:clj AssertionError :cljs js/Error))
+(def assertion-error js/Error)
 
 (specification "initialization"
   (assertions
@@ -114,13 +112,10 @@
                 :todo/text "NEW"
                 :todo/items [[:todo-items/by-id 200]]}}})))
 
-(defn om-tempid []
-  (omt/tempid #?(:clj (UUID/randomUUID))))
-
 (specification "public API"
   (component "create!"
     (let [env (make-env)
-          omt-1 (om-tempid)]
+          omt-1 (omt/tempid)]
       (assertions "can only create entities with om tempids for db/ids"
         (src/create! env :todo-items/by-id
                      {:db/id 100

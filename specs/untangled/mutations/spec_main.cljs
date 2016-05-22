@@ -1,4 +1,4 @@
-(ns untangled.client-db.spec-main
+(ns untangled.mutations.spec-main
   (:require-macros
     [untangled-spec.reporters.suite :as ts])
   (:require
