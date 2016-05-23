@@ -167,6 +167,10 @@
                                            :todo/items [{:db/id     t-2
                                                          :todo/text "set 200"}]}))
       (assertions
+        "removes the entity."
         (do (src/delete! env :todo-items/by-id {:db/id t-2}) @(:state env))
         => {:todo-items/by-id {t-1 {:db/id     t-1
-                                    :todo/text "create 100"}}}))))
+                                    :todo/text "create 100"}}}
+        "clears the index for that entity."
+        (get-in @(:index env) [:todo-items/by-id t-2])
+        => nil))))

@@ -121,4 +121,5 @@
                                         {}
                                         data) ;; Expected to be a map.
                                       )))
+    (swap! index update index-key dissoc id)
     (swap! state update index-key dissoc id)))
