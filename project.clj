@@ -1,15 +1,19 @@
 (defproject navis/untangled-mutations "0.1.0-SNAPSHOT"
-  :description "A cljc (server and client) validation library"
+  :description "Simplifies om next mutations"
   :url ""
   :license {:name "MIT Public License"
             :url  ""}
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [org.clojure/clojurescript "1.8.51"]
-                 [org.omcljs/om "1.0.0-alpha32" :scope "provided"]
+                 [org.omcljs/om "1.0.0-alpha32" :scope "provided"
+                  :exclusions [commons-codec]]
                  [navis/untangled-spec "0.3.6" :scope "test"]
-                 [lein-doo "0.1.6" :scope "test"]]
+                 [lein-doo "0.1.6" :scope "test"]
+                 [com.datomic/datomic-free "0.9.5359" :scope "provided"
+                  :exclusions [org.clojure/tools.cli com.google.guava/guava]]
+                 [navis/untangled-datomic "0.4.9"]]
 
-  :plugins [[com.jakemccrary/lein-test-refresh "0.14.0"]
+  :plugins [[com.jakemccrary/lein-test-refresh "0.15.0"]
             [lein-doo "0.1.6"]]
 
   :test-refresh {:report untangled-spec.reporters.terminal/untangled-report
@@ -43,7 +47,7 @@
   :profiles {:dev {:source-paths ["dev" "src"]
                    :dependencies [[binaryage/devtools "0.6.1"]
                                   [com.cemerick/piggieback "0.2.1"]
-                                  [figwheel-sidecar "0.5.3-1" :exclusions [joda-time clj-time]]
+                                  [figwheel-sidecar "0.5.3-2" :exclusions [commons-codec joda-time clj-time]]
                                   [org.clojure/tools.nrepl "0.2.12"]]
                    :repl-options {:init-ns user
                                   :nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}}})
