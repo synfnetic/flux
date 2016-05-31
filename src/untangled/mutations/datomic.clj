@@ -101,7 +101,7 @@
   [database {:as params :keys [db/id]} tx-type]
   (let [db (d/db (udb/get-connection database))
         ctx {:db db :id id
-             :schema (group-by :db/ident (sch/dump-schema db))
+             :schema (group-by :db/ident (:schema database))
              :tx-type tx-type}]
     (reduce (gen-tx-builder ctx)
             [] (dissoc params :db/id))))
@@ -141,7 +141,7 @@
                       :old (concat tx (retract-tx old-data k))
                       ;; HACKY/SMELLY
                       ((gen-tx-builder {:db db :id id :tx-type :action.type/set
-                                        :schema (group-by :db/ident (sch/dump-schema db))})
+                                        :schema (group-by :db/ident (:schema database))})
                        tx [k (new-data k)])))
                   tx diffs))
         []))))

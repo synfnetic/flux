@@ -11,7 +11,7 @@
                  [lein-doo "0.1.6" :scope "test"]
                  [com.datomic/datomic-free "0.9.5359" :scope "provided"
                   :exclusions [org.clojure/tools.cli com.google.guava/guava]]
-                 [navis/untangled-datomic "0.4.9"]]
+                 [navis/untangled-datomic "0.4.10-SNAPSHOT"]]
 
   :plugins [[com.jakemccrary/lein-test-refresh "0.15.0"]
             [lein-doo "0.1.6"]]
