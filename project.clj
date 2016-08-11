@@ -1,6 +1,6 @@
 (defproject synfnetic/flux "0.1.0-SNAPSHOT"
-  :description "Simplifies om next mutations"
-  :url ""
+  :description "Flux up your om next mutations!"
+  :url "https://github.com/synfnetic/flux"
   :license {:name "MIT Public License"}
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [org.clojure/clojurescript "1.8.51"]
@@ -30,15 +30,15 @@
   :cljsbuild {:builds [{:id           "test"
                         :source-paths ["specs" "src"]
                         :figwheel     true
-                        :compiler     {:main                 flux.spec-main
-                                       :output-to            "resources/public/js/specs/specs.js"
-                                       :output-dir           "resources/public/js/compiled/specs"
-                                       :asset-path           "js/compiled/specs"
-                                       :optimizations        :none}}
+                        :compiler     {:main          flux.spec-main
+                                       :output-to     "resources/public/js/specs/specs.js"
+                                       :output-dir    "resources/public/js/compiled/specs"
+                                       :asset-path    "js/compiled/specs"
+                                       :optimizations :none}}
                        {:id           "automated-tests"
                         :source-paths ["specs" "src"]
                         :compiler     {:output-to     "resources/private/js/unit-tests.js"
-                                       :main          untangled.all-tests
+                                       :main          flux.all-tests
                                        :output-dir    "resources/private/js/out"
                                        :asset-path    "js/out"
                                        :optimizations :none}}]}

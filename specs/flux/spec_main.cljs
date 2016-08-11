@@ -3,7 +3,7 @@
     [untangled-spec.reporters.suite :as ts])
   (:require
     untangled-spec.reporters.impl.suite
-    untangled.tests-to-run))
+    flux.tests-to-run))
 
 (enable-console-print!)
 
