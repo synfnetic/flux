@@ -1,7 +1,7 @@
-(ns untangled.mutations.datomic-spec
+(ns flux.datomic-spec
   (:require [untangled-spec.core :refer
              [specification component behavior assertions provided when-mocking]]
-            [untangled.mutations.datomic :as impl]
+            [flux.datomic :as impl]
             [untangled.datomic.core :as udc]
             [untangled.datomic.protocols :as udb]
             [untangled.datomic.test-helpers :as test-helpers]
@@ -26,7 +26,7 @@
   `(test-helpers/with-db-fixture db#
      (let [~env (~setup {:dbc db# :conn (udb/get-connection db#)})]
        ~@body)
-     :migrations "untangled.mutations.migrations"
+     :migrations "flux.migrations"
      :seed-fn ~seed-fn))
 
 (defn fixture-setup [{:keys [dbc conn] :as env}]

@@ -1,4 +1,4 @@
-(ns untangled.mutations.migrations.mutations-20160529
+(ns flux.migrations.flux-20160529
   (:require [datomic.api :as d]
             [untangled.datomic.schema :as s]))
 
@@ -8,6 +8,4 @@
      [(s/schema todo
         (s/fields
           [text :string]
-          [items :ref :many]
-          ))
-      ])])
+          [items :ref :many]))])])

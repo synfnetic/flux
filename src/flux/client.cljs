@@ -1,4 +1,4 @@
-(ns untangled.mutations.client
+(ns flux.client
   (:require [om.tempid :as omt]))
 
 (def concatv (comp vec concat))

@@ -1,16 +1,15 @@
-(ns untangled.mutations.datomic
+(ns flux.datomic
   (:require [clojure.walk :as walk]
             [datomic.api :as d]
-            [om.tempid :as omt]
-            [untangled.datomic.protocols :as udb]
-            [taoensso.timbre :as timbre]
-            [untangled.datomic
-             [core :as udc]
-             [schema :as sch]
-             [protocols :as udb]])
+            [om.tempid :as omt])
   (:import datomic.query.EntityMap))
 
 (defn datomic-tempid? [x] (= (type x) datomic.db.DbId))
+
+(defn resolve-ids [db ctid->stid stid->rid]
+  (reduce (fn [acc [ctid stid]]
+            (assoc acc ctid (d/resolve-tempid db stid->rid stid)))
+    {} ctid->stid))
 
 (defn transact!
   "Given a db connection and a vector of data formatted for a datomic transaction, replaces client temp-ids
@@ -19,7 +18,7 @@
   CANNOT BE RUN on a transaction that includes datomic entities, only plain data!
   "
   ([database & txs]
-   (let [conn (udb/get-connection database)
+   (let [conn (:connection database)
          om-tempids->datomic-tempids (atom {})
          transaction (walk/prewalk
                        (fn [id]
@@ -32,8 +31,7 @@
                            id))
                        (apply concat txs))
          resolved-ids->real-id (:tempids @(d/transact conn transaction))
-         remaps (udc/resolve-ids (d/db conn)
-                                 @om-tempids->datomic-tempids resolved-ids->real-id)]
+         remaps (resolve-ids (d/db conn) @om-tempids->datomic-tempids resolved-ids->real-id)]
      {:tempids remaps})))
 
 (defn cardinality-of [{:keys [schema]} k]
@@ -99,7 +97,7 @@
 
 (defn params->tx
   [database {:as params :keys [db/id]} tx-type]
-  (let [db (d/db (udb/get-connection database))
+  (let [db (d/db (:connection database))
         ctx {:db db :id id
              :schema (group-by :db/ident (:schema database))
              :tx-type tx-type}]
@@ -128,7 +126,7 @@
     []))
 
 (defn replace-tx [database {:keys [db/id] :as params}]
-  (let [conn (udb/get-connection database)
+  (let [conn (:connection database)
         db (d/db conn)
         old-data (d/touch (d/entity db id))
         new-data (dissoc params :db/id)]

@@ -1,4 +1,4 @@
-(ns untangled.mutations.spec-main
+(ns flux.spec-main
   (:require-macros
     [untangled-spec.reporters.suite :as ts])
   (:require

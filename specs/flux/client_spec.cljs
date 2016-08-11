@@ -1,7 +1,7 @@
-(ns untangled.mutations.client-spec
+(ns flux.client-spec
   (:require [untangled-spec.core :refer-macros
              [specification component behavior assertions provided when-mocking]]
-            [untangled.mutations.client :as src]
+            [flux.client :as src]
             [om.tempid :as omt]))
 
 (def schema

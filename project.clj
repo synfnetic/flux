@@ -1,8 +1,7 @@
-(defproject navis/untangled-mutations "0.1.0-SNAPSHOT"
+(defproject synfnetic/flux "0.1.0-SNAPSHOT"
   :description "Simplifies om next mutations"
   :url ""
-  :license {:name "MIT Public License"
-            :url  ""}
+  :license {:name "MIT Public License"}
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [org.clojure/clojurescript "1.8.51"]
                  [org.omcljs/om "1.0.0-alpha32" :scope "provided"
@@ -11,7 +10,7 @@
                  [lein-doo "0.1.6" :scope "test"]
                  [com.datomic/datomic-free "0.9.5359" :scope "provided"
                   :exclusions [org.clojure/tools.cli com.google.guava/guava]]
-                 [navis/untangled-datomic "0.4.10"]]
+                 [navis/untangled-datomic "0.4.10" :scope "test"]]
 
   :plugins [[com.jakemccrary/lein-test-refresh "0.15.0"]
             [lein-doo "0.1.6"]]
@@ -31,7 +30,7 @@
   :cljsbuild {:builds [{:id           "test"
                         :source-paths ["specs" "src"]
                         :figwheel     true
-                        :compiler     {:main                 untangled.mutations.spec-main
+                        :compiler     {:main                 flux.spec-main
                                        :output-to            "resources/public/js/specs/specs.js"
                                        :output-dir           "resources/public/js/compiled/specs"
                                        :asset-path           "js/compiled/specs"
